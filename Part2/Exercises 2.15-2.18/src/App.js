@@ -2,12 +2,23 @@ import React, { useState, useEffect } from "react";
 import personService from "./services/persons";
 import PhonebookDisplay from "./components/PhonebookDisplay";
 import Form from "./components/Form";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [number, setNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [notification, setNotification] = useState(null);
+  const [notificationStyle, setNotificationStyle] = useState({
+    color: "green",
+    background: "lightgrey",
+    fontSize: 20,
+    borderStyle: "solid",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  });
 
   const hook = () => {
     personService
@@ -15,7 +26,13 @@ const App = () => {
       .then((initialPersons) => {
         setPersons(initialPersons);
       })
-      .catch((error) => alert(error));
+      .catch((error) => {
+        console.log("error", error);
+        setNotification("Something went wrong...");
+        setTimeout(() => {
+          setNotification(null);
+        }, 5000);
+      });
   };
 
   useEffect(hook, []);
@@ -47,7 +64,9 @@ const App = () => {
               )
             )
           )
-          .catch((error) => alert(error));
+          .catch((error) => {
+            alert("Something went...");
+          });
       } else {
         return;
       }
@@ -56,8 +75,19 @@ const App = () => {
         .create(newPerson)
         .then((returnedObject) => {
           setPersons(persons.concat(returnedObject));
+          setNotificationStyle({ color: "green", ...notificationStyle });
+
+          setNotification(`Added ${newPerson.name}.`);
+          setTimeout(() => {
+            setNotification(null);
+          }, 5000);
         })
-        .catch((error) => alert(error));
+        .catch((error) => {
+          setNotification(`Could not add ${newPerson.name} to the server.`);
+          setTimeout(() => {
+            setNotification(null);
+          }, 5000);
+        });
     }
     setNewName("");
     setNumber("");
@@ -75,7 +105,13 @@ const App = () => {
         .then(() => {
           setPersons(persons.filter((elem) => elem.id !== id));
         })
-        .catch((error) => alert(error));
+        .catch((error) => {
+          setNotification(`${name} was already removed from server`);
+          setNotificationStyle({ ...notificationStyle, color: "red" });
+          setTimeout(() => {
+            setNotification(null);
+          }, 5000);
+        });
     } else {
       return;
     }
@@ -86,7 +122,11 @@ const App = () => {
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
+      <Notification
+        message={notification}
+        notificationStyle={notificationStyle}
+      />
       <div>
         filter shown with: <input value={filter} onChange={onFilterChange} />
       </div>
